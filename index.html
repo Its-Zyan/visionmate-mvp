@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VisionMate</title>
+</head>
+
+<body style="font-family: Arial; padding: 20px;">
+  <h2>VisionMate – Safety Assistant</h2>
+  <button onclick="startListening()">Talk</button>
+
+  <p id="output"></p>
+
+<script>
+const output = document.getElementById("output");
+
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = "en-US";
+
+function speak(text) {
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.rate = 0.9;
+  window.speechSynthesis.speak(msg);
+  output.innerText = text;
+}
+
+function startListening() {
+  speak("I am listening. Please tell me what is happening.");
+  recognition.start();
+}
+
+recognition.onresult = function(event) {
+  const userSpeech = event.results[0][0].transcript;
+  speak("Thank you. I understand. Please stay calm. I will help you step by step.");
+}
+</script>
+</body>
+</html>

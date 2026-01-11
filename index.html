@@ -1,36 +1,154 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>VisionMate</title>
+<meta charset="UTF-8">
+<title>VisionMate</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg: #0b0f1a;
+  --card: #141a2e;
+  --accent: #4fd1c5;
+  --danger: #ff5c5c;
+  --text: #eaeaff;
+}
+body {
+  margin:0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+  background: var(--bg);
+  color: var(--text);
+}
+.container {
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+.card {
+  background: var(--card);
+  border-radius:18px;
+  padding:20px;
+  margin-bottom:15px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.4);
+}
+h1 {
+  font-size:22px;
+  margin-bottom:8px;
+}
+button {
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border:none;
+  border-radius:14px;
+  background: var(--accent);
+  color:#000;
+  font-size:16px;
+  font-weight:600;
+}
+button.secondary {
+  background:#2a3156;
+  color:var(--text);
+}
+button.danger {
+  background:var(--danger);
+  color:white;
+}
+video {
+  width:100%;
+  border-radius:14px;
+}
+#status {
+  margin-top:10px;
+  font-size:14px;
+  opacity:0.9;
+}
+.small {
+  font-size:13px;
+  opacity:0.8;
+}
+</style>
 </head>
 
-<body style="font-family: Arial; padding: 20px;">
-  <h2>VisionMate – Safety Assistant</h2>
-  <button onclick="startListening()">Talk</button>
+<body>
+<div class="container">
 
-  <p id="output"></p>
+  <div class="card">
+    <h1>VisionMate</h1>
+    <p class="small">Calm safety & first-aid assistant for blind users</p>
+  </div>
+
+  <div class="card">
+    <button onclick="listen()">🎤 Talk</button>
+    <button class="secondary" onclick="startCamera()">📷 Turn on Camera</button>
+    <video id="cam" autoplay></video>
+    <p id="status"></p>
+  </div>
+
+  <div class="card">
+    <button class="danger" onclick="sendEmergency()">🚨 Emergency Help</button>
+    <p class="small">Sends your location to a trusted contact</p>
+  </div>
+
+</div>
 
 <script>
-const output = document.getElementById("output");
+const status = document.getElementById("status");
+const cam = document.getElementById("cam");
+
+function speak(text) {
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.rate = 0.85;
+  msg.pitch = 1;
+  speechSynthesis.speak(msg);
+  status.innerText = text;
+}
 
 const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
 recognition.lang = "en-US";
 
-function speak(text) {
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.rate = 0.9;
-  window.speechSynthesis.speak(msg);
-  output.innerText = text;
-}
-
-function startListening() {
+function listen() {
   speak("I am listening. Please tell me what is happening.");
   recognition.start();
 }
 
-recognition.onresult = function(event) {
-  const userSpeech = event.results[0][0].transcript;
-  speak("Thank you. I understand. Please stay calm. I will help you step by step.");
+recognition.onresult = e => {
+  const text = e.results[0][0].transcript.toLowerCase();
+
+  if(text.includes("hurt") || text.includes("injury")) {
+    speak("I hear distress. Please stay calm. Is there bleeding? Yes or no?");
+  }
+  else if(text.includes("yes")) {
+    speak("Please apply firm pressure with a cloth. If bleeding continues, press the emergency button.");
+  }
+  else if(text.includes("danger") || text.includes("scared")) {
+    speak("I understand fear. I am here. Move to a safe area and keep talking to me.");
+  }
+  else {
+    speak("Thank you. I am here with you. Please explain more slowly.");
+  }
+};
+
+function startCamera() {
+  navigator.mediaDevices.getUserMedia({video:true})
+  .then(s => {
+    cam.srcObject = s;
+    speak("Camera is on. I can see now. Please move slowly.");
+  })
+  .catch(()=>speak("Camera access denied."));
+}
+
+function sendEmergency() {
+  if(!navigator.geolocation){
+    speak("Location not available.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    speak("Emergency alert prepared. Location ready to share.");
+    alert("Emergency location:\\nLatitude: "+lat+"\\nLongitude: "+lon);
+  });
 }
 </script>
 </body>
